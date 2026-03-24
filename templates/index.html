@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skin Diseases Detection</title>
+    <style>
+        :root {
+            --primary: #0ea5a4;
+            --primary-dark: #0b7f7c;
+            --header-bg: #1f3a5f;
+            --nav-bg: #244469;
+            --page-bg: #f3f6fb;
+            --card-bg: #ffffff;
+            --border: #e5e7eb;
+            --text: #111827;
+            --muted: #6b7280;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--page-bg);
+            color: var(--text);
+        }
+        header {
+            background: linear-gradient(90deg, var(--header-bg), var(--primary));
+            color: white;
+            padding: 16px 24px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.3);
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.9rem;
+        }
+        nav {
+            display: flex;
+            justify-content: center;
+            background-color: var(--nav-bg);
+            padding: 10px 0;
+            gap: 18px;
+        }
+        nav a {
+            color: #e5e7eb;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        nav a:hover {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+        .container {
+            max-width: 960px;
+            margin: 24px auto;
+            background: var(--card-bg);
+            padding: 22px;
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+            border-radius: 14px;
+            border: 1px solid var(--border);
+        }
+        .tab-buttons {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        .tab-buttons button {
+            flex: 1;
+            padding: 12px;
+            margin: 0;
+            border: none;
+            background-color: transparent;
+            color: var(--muted);
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+        }
+        .tab-buttons button.active {
+            color: var(--primary-dark);
+            border-bottom-color: var(--primary);
+        }
+        .tab-buttons button:hover {
+            background-color: rgba(14, 165, 164, 0.06);
+        }
+        .tab-content {
+            display: none;
+            padding: 18px 0 4px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        input[type="file"] {
+            margin: 8px 0;
+            padding: 8px;
+            font-size: 0.95rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background-color: #f9fafb;
+        }
+        button[type="submit"] {
+            background-color: var(--primary);
+            color: white;
+            padding: 9px 22px;
+            border: none;
+            border-radius: 999px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            font-weight: 600;
+            box-shadow: 0 2px 6px rgba(15, 118, 110, 0.3);
+        }
+        button[type="submit"]:hover {
+            background-color: var(--primary-dark);
+        }
+        .results {
+            margin-top: 28px;
+        }
+        .results h2 {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+        .results img,
+        .results video {
+            display: block;
+            margin: 18px auto;
+            max-width: 92%;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+        }
+        .insight-row {
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            padding: 8px 10px;
+            margin-top: 6px;
+            background-color: #f9fafb;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.88rem;
+        }
+        .insight-arrow {
+            font-size: 0.9rem;
+            color: var(--muted);
+            margin-left: 8px;
+        }
+        .insight-details {
+            margin-top: 4px;
+            padding: 8px 10px 6px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+            border-radius: 0 0 8px 8px;
+            border: 1px solid var(--border);
+            border-top: none;
+        }
+        footer {
+            background-color: var(--nav-bg);
+            color: #e5e7eb;
+            text-align: center;
+            padding: 18px;
+            margin-top: 20px;
+            font-size: 0.86rem;
+        }
+        footer a {
+            color: #fbbf24;
+            text-decoration: none;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+    <script>
+        function showTab(tabId) {
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+
+            const buttons = document.querySelectorAll('.tab-buttons button');
+            buttons.forEach(button => button.classList.remove('active'));
+
+            document.getElementById(tabId).classList.add('active');
+            document.querySelector('[data-tab=\"' + tabId + '\"]').classList.add('active');
+        }
+
+        function toggleInsight(id) {
+            const body = document.getElementById(id);
+            if (!body) return;
+            const arrow = body.previousElementSibling?.querySelector('.insight-arrow');
+            const isHidden = body.style.display === '' || body.style.display === 'none';
+            body.style.display = isHidden ? 'block' : 'none';
+            if (arrow) {
+                arrow.textContent = isHidden ? '▲' : '▼';
+            }
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <h1>Skin Diseases Detection System</h1>
+    </header>
+   
+    <div class="container">
+        <div class="tab-buttons">
+            <button class="active" data-tab="image-tab" onclick="showTab('image-tab')">Image Upload</button>
+            <button data-tab="video-tab" onclick="showTab('video-tab')">Video Upload</button>
+        </div>
+        <div id="image-tab" class="tab-content active">
+            <h2>Upload Images</h2>
+            <form action="/" method="POST" enctype="multipart/form-data">
+                <input type="file" name="files" accept="image/png, image/jpeg" multiple>
+                <button type="submit">Upload and Process Images</button>
+            </form>
+        </div>
+        <div id="video-tab" class="tab-content">
+            <h2>Upload Videos</h2>
+            <form action="/" method="POST" enctype="multipart/form-data">
+                <input type="file" name="files" accept="video/mp4, video/avi, video/mov" multiple>
+                <button type="submit">Upload and Process Videos</button>
+            </form>
+        </div>
+
+        {% if processed_items %}
+        <div class="results">
+            <h2>Processed Results</h2>
+            {% for item in processed_items %}
+                {% set outer_index = loop.index0 %}
+                {% if item.is_video %}
+                    <video controls>
+                        <source src="{{ item.url }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                {% else %}
+                    <img src="{{ item.url }}" alt="Processed Image">
+                {% endif %}
+
+                {% if item.diseases %}
+                    <div style="margin-top:10px; font-size:0.9rem;">
+                        <strong>Predictions:</strong><br>
+                        {% for d in item.diseases %}
+                            {% set pct = d.confidence * 100 %}
+                            • {{ d.label }} – {{ '%.1f' % pct }}%<br>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {% if item.insights %}
+                    {% for ins in item.insights %}
+                        {% set insight_id = 'insight-' ~ loop.index0 ~ '-' ~ outer_index %}
+                        <div class="insight-row" onclick="toggleInsight('{{ insight_id }}')">
+                            <span>
+                                <strong>{{ ins.label }}</strong>
+                                <span style="color:var(--muted); margin-left:4px;">
+                                    (tap for detailed info)
+                                </span>
+                            </span>
+                            <span class="insight-arrow">▼</span>
+                        </div>
+                        <div id="{{ insight_id }}" class="insight-details" style="display:none;">
+                            <div><strong>Overview:</strong> {{ ins.description }}</div>
+                            <div style="margin-top:2px;"><strong>Symptoms:</strong> {{ ins.symptoms }}</div>
+                            <div style="margin-top:2px;"><strong>Precautions &amp; remedies:</strong> {{ ins.precautions }}</div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                <hr style="margin:18px 0; border:none; border-top:1px solid #e5e7eb;">
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+   
+</body>
+</html>

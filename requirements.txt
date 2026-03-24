@@ -1,0 +1,13 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+flask
+opencv-python-headless
+# Use lightweight CPU-only PyTorch on Render to avoid huge CUDA deps
+torch==2.10.0+cpu
+torchvision==0.25.0+cpu
+ultralytics
+supervision
+gunicorn
+numpy
+pillow
+onnxruntime
+onnx
