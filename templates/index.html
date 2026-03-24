@@ -211,7 +211,9 @@
     <div class="container">
         <div class="tab-buttons">
             <button class="active" data-tab="image-tab" onclick="showTab('image-tab')">Image Upload</button>
+            {% if enable_video %}
             <button data-tab="video-tab" onclick="showTab('video-tab')">Video Upload</button>
+            {% endif %}
         </div>
         <div id="image-tab" class="tab-content active">
             <h2>Upload Images</h2>
@@ -220,6 +222,7 @@
                 <button type="submit">Upload and Process Images</button>
             </form>
         </div>
+        {% if enable_video %}
         <div id="video-tab" class="tab-content">
             <h2>Upload Videos</h2>
             <form action="/" method="POST" enctype="multipart/form-data">
@@ -227,6 +230,11 @@
                 <button type="submit">Upload and Process Videos</button>
             </form>
         </div>
+        {% else %}
+        <div style="margin-top:12px; padding:10px 12px; border:1px solid #e5e7eb; border-radius:8px; background:#f9fafb; color:#374151; font-size:0.9rem;">
+            Video processing is currently disabled on this deployment to keep memory usage stable on Render free tier.
+        </div>
+        {% endif %}
 
         {% if processed_items %}
         <div class="results">
@@ -270,6 +278,12 @@
                             <div style="margin-top:2px;"><strong>Precautions &amp; remedies:</strong> {{ ins.precautions }}</div>
                         </div>
                     {% endfor %}
+                {% endif %}
+
+                {% if item.message %}
+                    <div style="margin-top:10px; font-size:0.9rem; color:#374151; background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:8px 10px;">
+                        {{ item.message }}
+                    </div>
                 {% endif %}
                 <hr style="margin:18px 0; border:none; border-top:1px solid #e5e7eb;">
             {% endfor %}
