@@ -4,12 +4,15 @@
 from flask import Flask, render_template, request, url_for
 import os
 import cv2
+import threading
+import numpy as np
+import torch
 from ultralytics import YOLO
 import supervision as sv
 from supervision.annotators.core import BoxAnnotator
 
 
-TILE_SIZE = (1280, 720)
+TILE_SIZE = (640, 640)
 
 
 # ==============================
@@ -17,8 +20,13 @@ TILE_SIZE = (1280, 720)
 # ==============================
 app = Flask(__name__)
 
-# Load YOLO model
-model = YOLO("last.pt")
+# Keep CPU usage predictable on small Render instances.
+torch.set_num_threads(int(os.environ.get("TORCH_NUM_THREADS", "1")))
+
+# Lazy-loaded singleton model (loaded once per worker).
+_MODEL = None
+_MODEL_LOCK = threading.Lock()
+MODEL_PATH = os.environ.get("MODEL_PATH", "best.pt")
 
 
 # ==============================
@@ -89,9 +97,19 @@ def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+def get_model() -> YOLO:
+    global _MODEL
+    if _MODEL is None:
+        with _MODEL_LOCK:
+            if _MODEL is None:
+                _MODEL = YOLO(MODEL_PATH)
+    return _MODEL
+
+
 def summarize_detections(detections) -> list[dict]:
     """Return per‑class best confidence summary."""
     best_per_class = {}
+    model = get_model()
 
     for class_id, conf in zip(detections.class_id, detections.confidence):
         label = str(model.model.names[int(class_id)])
@@ -131,6 +149,7 @@ def build_clinical_insights(disease_summary: list[dict]) -> list[dict]:
 # Image Processing
 # ==============================
 def process_image(input_image_path, output_image_path):
+    model = get_model()
 
     image = cv2.imread(input_image_path)
 
@@ -141,7 +160,12 @@ def process_image(input_image_path, output_image_path):
     resized = cv2.resize(image, TILE_SIZE)
 
     # YOLO detection
-    results = model(resized)[0]
+    results = model.predict(
+        source=resized,
+        verbose=False,
+        device="cpu",
+        imgsz=640,
+    )[0]
 
     detections = sv.Detections.from_ultralytics(results)
 
@@ -188,6 +212,7 @@ def process_image(input_image_path, output_image_path):
 # Video Processing
 # ==============================
 def process_video(input_video_path, output_video_path):
+    model = get_model()
 
     cap = cv2.VideoCapture(input_video_path)
 
@@ -218,7 +243,12 @@ def process_video(input_video_path, output_video_path):
 
         resized = cv2.resize(frame, TILE_SIZE)
 
-        results = model(resized)[0]
+        results = model.predict(
+            source=resized,
+            verbose=False,
+            device="cpu",
+            imgsz=640,
+        )[0]
 
         detections = sv.Detections.from_ultralytics(results)
 
@@ -329,5 +359,13 @@ def upload_files():
 # Run App
 # ==============================
 if __name__ == "__main__":
+    # Optional warmup in local/dev to avoid first-inference latency.
+    if os.environ.get("WARMUP_MODEL", "0") == "1":
+        try:
+            warmup = np.zeros((640, 640, 3), dtype=np.uint8)
+            get_model().predict(source=warmup, verbose=False, device="cpu", imgsz=640)
+        except Exception as exc:
+            print(f"Model warmup skipped: {exc}", flush=True)
+
     port = int(os.environ.get("PORT", 5000)) 
     app.run(host="0.0.0.0", port=port, debug=False)
